@@ -19,8 +19,9 @@ const IDLE_NOTES = [
   "preserve height",
   "preserve scale",
   "preserve ground line",
-  "frame 8 must transition naturally back to frame 1",
-  "do NOT simply duplicate frame 1 as frame 8",
+  "six-beat cycle: rest, inhale, peak, settle, exhale, near-rest",
+  "frame 6 must transition naturally back to frame 1",
+  "do NOT simply duplicate frame 1 as frame 6",
 ];
 
 const WALK_NOTES = [
@@ -61,6 +62,9 @@ const BATTLE_NOTES = [
   "no random weapons",
   "no redesign",
   "seamless idle loop",
+  "six-beat weight-shift cycle",
+  "frame 6 must transition naturally back to frame 1",
+  "do NOT simply duplicate frame 1 as frame 6",
 ];
 
 const DIALOGUE_NOTES = [
@@ -120,8 +124,8 @@ function capitalizeDirection(direction: TamerDirection): string {
 
 function idleRule(direction: "south" | "north" | "east" | "west"): TamerAnimationRule {
   return {
-    frames: 8,
-    layout: "row-8",
+    frames: 6,
+    layout: "grid-3x2",
     bodyType: "full-body",
     direction,
     category: "idle",
@@ -150,7 +154,7 @@ function walkRule(
     direction,
     category: "walk",
     isLoop: true,
-    defaultFps: 8,
+    defaultFps: 10,
     notes: WALK_NOTES,
     label: `Walk ${capitalizeDirection(direction)}`,
   };
@@ -164,7 +168,7 @@ function runRule(direction: "south" | "north" | "east" | "west"): TamerAnimation
     direction,
     category: "run",
     isLoop: true,
-    defaultFps: 12,
+    defaultFps: 15,
     notes: RUN_NOTES,
     label: `Run ${capitalizeDirection(direction)}`,
   };
@@ -178,7 +182,7 @@ function dialogueRule(emotion: TamerEmotion): TamerAnimationRule {
     emotion,
     category: "dialogue",
     isLoop: true,
-    defaultFps: 8,
+    defaultFps: 10,
     notes: DIALOGUE_NOTES,
     label: `Dialogue ${TAMER_EMOTION_LABELS[emotion]}`,
   };
@@ -219,8 +223,8 @@ export const TAMER_ANIMATION_RULES: Record<TamerSpriteType, TamerAnimationRule> 
   "run-west": runRule("west"),
 
   "battle-back": {
-    frames: 8,
-    layout: "row-8",
+    frames: 6,
+    layout: "grid-3x2",
     bodyType: "full-body",
     direction: "back",
     category: "battle",

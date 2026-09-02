@@ -99,9 +99,10 @@ function buildAnimationPrompt(rule: TamerAnimationRule): string {
     case "idle":
       return `ANIMATION: OVERWORLD IDLE (${rule.frames} frames, looping).
 Full-body sprite. Subtle breathing / body bob idle cycle.
+Six-beat loop: 1 rest, 2 slight inhale, 3 peak breath, 4 settle, 5 exhale, 6 near-rest.
 Restrained movement. Hair and jumper move slightly. Optional natural blink in one later frame.
-Do not dramatically shift pose. Frame 8 must transition naturally back to frame 1.
-Do NOT simply duplicate frame 1 as frame 8.
+Do not dramatically shift pose. Frame 6 must transition naturally back to frame 1.
+Do NOT simply duplicate frame 1 as frame 6.
 
 Rules:
 ${notes}`;
@@ -116,14 +117,17 @@ ${notes}`;
       return `ANIMATION: OVERWORLD RUN CYCLE (${rule.frames} frames, looping).
 Full-body sprite. Stronger stride than walking, with clear contact / pass / flight phases and stronger but controlled arm swing.
 Hair and jumper react naturally. Frame 8 transitions naturally to frame 1.
+This is the same 8-frame locomotion cycle as a walk, played faster — do not add extra unique poses beyond the 8 frames.
 
 Rules:
 ${notes}`;
     case "battle":
       return `ANIMATION: BATTLE IDLE (${rule.frames} frames, looping).
 Full-body sprite. Player tamer viewed from behind in a battle-ready stance, facing the enemy monster.
+Six-beat weight-shift loop: 1 rest, 2 shift, 3 peak, 4 settle, 5 return, 6 near-rest.
 Subtle breathing / weight shift. Restrained hand movement is acceptable.
 No random weapons. No redesign. No major rotation. Seamless idle loop.
+Frame 6 must transition naturally back to frame 1. Do NOT simply duplicate frame 1 as frame 6.
 
 Rules:
 ${notes}`;
