@@ -299,7 +299,11 @@ export default function TamerModePanel({ imageModel, gptImageQuality }: TamerMod
       const spec = getSheetLayoutSpec(getTamerAnimationRule(spriteType).layout);
       setGridCols(spec.cols);
       setGridRows(spec.rows);
-      setCompletedSteps((prev) => new Set([...prev, 2]));
+      setCompletedSteps((prev) => {
+        const next = new Set(prev);
+        next.add(2);
+        return next;
+      });
       setCurrentStep(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to remove background");
@@ -552,7 +556,11 @@ export default function TamerModePanel({ imageModel, gptImageQuality }: TamerMod
             <button
               className="btn btn-success"
               onClick={() => {
-                setCompletedSteps((prev) => new Set([...prev, 3]));
+                setCompletedSteps((prev) => {
+                  const next = new Set(prev);
+                  next.add(3);
+                  return next;
+                });
                 setCurrentStep(4);
               }}
             >
@@ -667,7 +675,11 @@ export default function TamerModePanel({ imageModel, gptImageQuality }: TamerMod
             <button
               className="btn btn-success"
               onClick={() => {
-                setCompletedSteps((prev) => new Set([...prev, 4]));
+                setCompletedSteps((prev) => {
+                  const next = new Set(prev);
+                  next.add(4);
+                  return next;
+                });
                 setCurrentStep(5);
               }}
               disabled={extractedFrames.length === 0}

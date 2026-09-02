@@ -43,6 +43,17 @@ export interface ZipEntry {
   data: Uint8Array;
 }
 
+function concatBytes(parts: Uint8Array[]): Uint8Array {
+  const total = parts.reduce((sum, part) => sum + part.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const part of parts) {
+    out.set(part, offset);
+    offset += part.length;
+  }
+  return out;
+}
+
 /** Build an uncompressed ZIP (STORE method). No extra dependencies. */
 export function createZip(files: ZipEntry[]): Blob {
   const localParts: Uint8Array[] = [];
@@ -54,7 +65,7 @@ export function createZip(files: ZipEntry[]): Blob {
     const checksum = crc32(file.data);
     const size = file.data.length;
 
-    const localHeader = [
+    const localHeader = concatBytes([
       u32(0x04034b50),
       u16(10),
       u16(0),
@@ -67,13 +78,11 @@ export function createZip(files: ZipEntry[]): Blob {
       u16(nameBytes.length),
       u16(0),
       nameBytes,
-    ];
+    ]);
 
-    const localHeaderLength =
-      30 + nameBytes.length;
-    localParts.push(...localHeader, file.data);
+    localParts.push(localHeader, file.data);
 
-    const centralHeader = [
+    const centralHeader = concatBytes([
       u32(0x02014b50),
       u16(20),
       u16(10),
@@ -92,27 +101,28 @@ export function createZip(files: ZipEntry[]): Blob {
       u32(0),
       u32(offset),
       nameBytes,
-    ];
-    centralParts.push(...centralHeader);
+    ]);
+    centralParts.push(centralHeader);
 
-    offset += localHeaderLength + size;
+    offset += localHeader.length + size;
   }
 
-  const centralSize = centralParts.reduce((sum, part) => sum + part.length, 0);
-  const endRecord = [
+  const centralDir = concatBytes(centralParts);
+  const endRecord = concatBytes([
     u32(0x06054b50),
     u16(0),
     u16(0),
     u16(files.length),
     u16(files.length),
-    u32(centralSize),
+    u32(centralDir.length),
     u32(offset),
     u16(0),
-  ];
+  ]);
 
-  return new Blob([...localParts, ...centralParts, ...endRecord], {
-    type: "application/zip",
-  });
+  const zipBytes = concatBytes([...localParts, centralDir, endRecord]);
+  const copy = new ArrayBuffer(zipBytes.byteLength);
+  new Uint8Array(copy).set(zipBytes);
+  return new Blob([copy], { type: "application/zip" });
 }
 
 export function dataUrlToUint8Array(dataUrl: string): Uint8Array {
