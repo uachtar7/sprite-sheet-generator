@@ -66,22 +66,24 @@ Locked-character sprite production for Monster Tamer. Generic side-scroller and 
 6. Add optional **additional animation notes** (additive only — they cannot change identity, outfit, direction, frame count, layout, or body type).
 7. Generate the sheet. Frame count and layout come from the server-side animation rules, not from the form.
 8. Remove the background.
-9. Extract frames. The grid starts from the rule layout (`8×1`, `3×2`, or `1×1`) and remains adjustable if the model packed frames differently.
-10. Preview at the extracted frame count with adjustable FPS.
+9. Extract frames. The grid starts from the rule layout (`8×1` for walk/run, `3×2` for idle/battle/dialogue, or `1×1` for portraits) and remains adjustable if the model packed frames differently.
+10. Preview at the extracted frame count with adjustable FPS (defaults are unique-frame playback rates for a 30 FPS game: each drawing is held for several ticks).
 11. Export the full sheet and/or individual PNG frames as a ZIP.
 
-Filenames follow `{character}_{animation}_{direction}_{index}.png`, for example `ayesha_idle_south_00.png`. Portraits omit the index: `ayesha_portrait_shocked.png`.
+Filenames follow `{character}_{animation}_{direction}_{index}.png`, for example `ayesha_idle_south_00.png` through `_05.png`. Portraits omit the index: `ayesha_portrait_shocked.png`.
+
+The game can run at 30 FPS while sprite art plays slower. Idle at 6 unique frames / 6 anim fps holds each drawing for 5 game ticks (~1s loop). Walk at 8 / 10 fps holds 3 ticks. Run uses the same 8 unique frames at 15 anim fps (2-tick hold). Do not generate 24 or 30 unique drawings per cycle.
 
 ### Canonical frame table
 
-| Animation | Directions | Frames |
-|---|---|---|
-| Idle | S / N / E / W | 8 |
-| Walk | 8 directions | 8 |
-| Run | S / N / E / W | 8 |
-| Battle Back | Back | 8 |
-| Dialogue | per emotion | 6 |
-| Portrait | per emotion | 1 |
+| Animation | Directions | Unique frames | Layout | Playback at 30 Hz |
+|---|---|---|---|---|
+| Idle | S / N / E / W | 6 | 3×2 | 6 anim fps (hold 5 ticks) |
+| Walk | 8 directions | 8 | 8×1 | 10 anim fps (hold 3 ticks) |
+| Run | S / N / E / W | 8 | 8×1 | 15 anim fps (hold 2 ticks) |
+| Battle Back | Back | 6 | 3×2 | 6 anim fps (hold 5 ticks) |
+| Dialogue | per emotion | 6 | 3×2 | 10 anim fps (hold 3 ticks) |
+| Portrait | per emotion | 1 | single | still |
 
 Invalid combinations (for example Idle South-East or Run South-East) cannot be selected and are rejected by the API.
 

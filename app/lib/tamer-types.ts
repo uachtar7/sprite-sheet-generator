@@ -93,6 +93,7 @@ export interface TamerAnimationRule {
   emotion?: TamerEmotion;
   category: TamerAnimationCategory;
   isLoop: boolean;
+  /** Unique-frame playback rate. At a 30 FPS game tick, holdTicks = 30 / defaultFps. */
   defaultFps: number;
   notes: string[];
   label: string;
