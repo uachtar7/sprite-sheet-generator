@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
+import TamerModePanel from "./components/TamerModePanel";
+import type { AppMode } from "./lib/tamer-types";
 
 // Dynamically import sandbox components to avoid SSR issues
 const PixiSandbox = lazy(() => import("./components/PixiSandbox"));
@@ -95,8 +97,9 @@ export default function Home() {
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
-  // Game mode: side-scroller or isometric
+  // Game mode: side-scroller or isometric (generic workflow)
   const [gameMode, setGameMode] = useState<GameMode>("side-scroller");
+  const [appMode, setAppMode] = useState<AppMode>("generic");
 
   // Image model: global selection applied to every generation call
   const [imageModel, setImageModel] = useState<ImageModel>("nano-banana-pro");
@@ -1365,6 +1368,105 @@ export default function Home() {
         <p>Create pixel art sprite sheets using fal.ai</p>
       </header>
 
+      <div style={{ marginBottom: "1.5rem" }}>
+        <label style={{ display: "block", fontSize: "0.8rem", color: "var(--text-tertiary)", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Mode</label>
+        <div style={{ display: "inline-flex", borderRadius: "8px", overflow: "hidden", border: "1px solid var(--border-color)", marginBottom: "1rem" }}>
+          <button
+            type="button"
+            onClick={() => setAppMode("generic")}
+            style={{
+              padding: "0.5rem 1.25rem",
+              fontSize: "0.85rem",
+              fontWeight: 500,
+              border: "none",
+              cursor: "pointer",
+              background: appMode === "generic" ? "var(--fal-purple-deep)" : "var(--bg-secondary)",
+              color: appMode === "generic" ? "#fff" : "var(--text-secondary)",
+            }}
+          >
+            Generic
+          </button>
+          <button
+            type="button"
+            onClick={() => setAppMode("tamer")}
+            style={{
+              padding: "0.5rem 1.25rem",
+              fontSize: "0.85rem",
+              fontWeight: 500,
+              border: "none",
+              borderLeft: "1px solid var(--border-color)",
+              cursor: "pointer",
+              background: appMode === "tamer" ? "var(--fal-purple-deep)" : "var(--bg-secondary)",
+              color: appMode === "tamer" ? "#fff" : "var(--text-secondary)",
+            }}
+          >
+            Monster Tamer
+          </button>
+        </div>
+
+        <label style={{ display: "block", fontSize: "0.8rem", color: "var(--text-tertiary)", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Image Model</label>
+        <div style={{ display: "inline-flex", borderRadius: "8px", overflow: "hidden", border: "1px solid var(--border-color)" }}>
+          {([
+            ["nano-banana-pro", "Nano Banana Pro"],
+            ["nano-banana-lite", "Nano Banana Lite"],
+            ["gpt-image-2", "GPT-Image-2"],
+          ] as const).map(([value, label], i) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setImageModel(value)}
+              style={{
+                padding: "0.5rem 1.25rem",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+                border: "none",
+                borderLeft: i === 0 ? "none" : "1px solid var(--border-color)",
+                cursor: "pointer",
+                background: imageModel === value ? "var(--fal-purple-deep)" : "var(--bg-secondary)",
+                color: imageModel === value ? "#fff" : "var(--text-secondary)",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {imageModel === "gpt-image-2" && (
+          <div style={{ marginTop: "0.75rem" }}>
+            <label style={{ display: "block", fontSize: "0.8rem", color: "var(--text-tertiary)", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Quality</label>
+            <select
+              value={gptImageQuality}
+              onChange={(e) => setGptImageQuality(e.target.value as GptImageQuality)}
+              style={{
+                padding: "0.5rem 2.25rem 0.5rem 0.75rem",
+                fontFamily: "inherit",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+                color: "var(--text-primary)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "8px",
+                cursor: "pointer",
+                minWidth: "160px",
+                outline: "none",
+                appearance: "none",
+                WebkitAppearance: "none",
+                MozAppearance: "none",
+                background: "var(--bg-secondary) url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,0.6)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\") no-repeat right 0.85rem center",
+              }}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        )}
+      </div>
+
+      {appMode === "tamer" ? (
+        <TamerModePanel imageModel={imageModel} gptImageQuality={gptImageQuality} />
+      ) : (
+      <>
+
       {/* Steps indicator */}
       <div className="steps-indicator">
         {[1, 2, 3, 4, 5].map((displayStep) => {
@@ -1396,66 +1498,6 @@ export default function Home() {
             <span className="step-number">1</span>
             Generate Character
           </h2>
-
-          {/* Image model toggle — segmented control */}
-          <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", fontSize: "0.8rem", color: "var(--text-tertiary)", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Image Model</label>
-            <div style={{ display: "inline-flex", borderRadius: "8px", overflow: "hidden", border: "1px solid var(--border-color)" }}>
-              {([
-                ["nano-banana-pro", "Nano Banana Pro"],
-                ["nano-banana-lite", "Nano Banana Lite"],
-                ["gpt-image-2", "GPT-Image-2"],
-              ] as const).map(([value, label], i) => (
-                <button
-                  key={value}
-                  onClick={() => setImageModel(value)}
-                  style={{
-                    padding: "0.5rem 1.25rem",
-                    fontSize: "0.85rem",
-                    fontWeight: 500,
-                    border: "none",
-                    borderLeft: i === 0 ? "none" : "1px solid var(--border-color)",
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                    background: imageModel === value ? "var(--fal-purple-deep)" : "var(--bg-secondary)",
-                    color: imageModel === value ? "#fff" : "var(--text-secondary)",
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {imageModel === "gpt-image-2" && (
-              <div style={{ marginTop: "0.75rem" }}>
-                <label style={{ display: "block", fontSize: "0.8rem", color: "var(--text-tertiary)", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Quality</label>
-                <select
-                  value={gptImageQuality}
-                  onChange={(e) => setGptImageQuality(e.target.value as GptImageQuality)}
-                  style={{
-                    padding: "0.5rem 2.25rem 0.5rem 0.75rem",
-                    fontFamily: "inherit",
-                    fontSize: "0.85rem",
-                    fontWeight: 500,
-                    color: "var(--text-primary)",
-                    border: "1px solid var(--border-color)",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    minWidth: "160px",
-                    outline: "none",
-                    appearance: "none",
-                    WebkitAppearance: "none",
-                    MozAppearance: "none",
-                    background: "var(--bg-secondary) url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,0.6)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\") no-repeat right 0.85rem center",
-                  }}
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-            )}
-          </div>
 
           {/* Game mode toggle — segmented control */}
           <div style={{ marginBottom: "1.5rem" }}>
@@ -2958,6 +3000,8 @@ export default function Home() {
             </button>
           </div>
         </div>
+      )}
+      </>
       )}
     </main>
   );

@@ -20,7 +20,12 @@ Sprite sheet generator for 2D pixel art characters and maps. Built with [fal.ai]
 
 ## Features
 
-### Two Game Modes
+### Two Production Modes
+
+- **Generic** keeps the original side-scroller and isometric RPG workflows.
+- **Monster Tamer** is a locked-character production workflow for game-ready sheets (starting with Ayesha).
+
+### Two Generic Game Styles
 
 - **Side-Scroller** generates walk, jump, attack, and idle sprite sheets, plus an optional 3 layer parallax background.
 - **Isometric (RPG)** generates walk sheets for three directions (down, up, side), matching attack sheets for the same directions, an idle sheet, and a full top-down world map to explore.
@@ -43,11 +48,44 @@ Sprite sheet generator for 2D pixel art characters and maps. Built with [fal.ai]
 
 ### Image Models
 
-Pick the model once at the top of Step 1 and it applies to every generation in the flow:
+Pick the model once at the top of the page and it applies to every generation in the flow:
 
 - **Nano Banana Pro** (`fal-ai/nano-banana-pro` and `/edit`)
 - **Nano Banana Lite** (`google/nano-banana-lite` and `/edit`)
 - **GPT Image 2** (`openai/gpt-image-2` and `/edit`)
+
+## Monster Tamer Mode
+
+Locked-character sprite production for Monster Tamer. Generic side-scroller and isometric flows are unchanged.
+
+1. Select **Monster Tamer**.
+2. Choose a locked tamer (currently **Ayesha**).
+3. Upload the canonical character master. This image is the identity source of truth.
+4. Optionally add a directional reference and/or a style reference (lower priority than the master).
+5. Select an animation category and a valid type/direction.
+6. Add optional **additional animation notes** (additive only — they cannot change identity, outfit, direction, frame count, layout, or body type).
+7. Generate the sheet. Frame count and layout come from the server-side animation rules, not from the form.
+8. Remove the background.
+9. Extract frames. The grid starts from the rule layout (`8×1`, `3×2`, or `1×1`) and remains adjustable if the model packed frames differently.
+10. Preview at the extracted frame count with adjustable FPS.
+11. Export the full sheet and/or individual PNG frames as a ZIP.
+
+Filenames follow `{character}_{animation}_{direction}_{index}.png`, for example `ayesha_idle_south_00.png`. Portraits omit the index: `ayesha_portrait_shocked.png`.
+
+### Canonical frame table
+
+| Animation | Directions | Frames |
+|---|---|---|
+| Idle | S / N / E / W | 8 |
+| Walk | 8 directions | 8 |
+| Run | S / N / E / W | 8 |
+| Battle Back | Back | 8 |
+| Dialogue | per emotion | 6 |
+| Portrait | per emotion | 1 |
+
+Invalid combinations (for example Idle South-East or Run South-East) cannot be selected and are rejected by the API.
+
+Adding another tamer later is a new character profile. Animation rules are shared.
 
 ## Getting Started
 
