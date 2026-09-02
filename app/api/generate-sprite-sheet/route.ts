@@ -1,6 +1,9 @@
 import { fal } from "@fal-ai/client";
 import { NextRequest, NextResponse } from "next/server";
 import { generateImage, AspectRatio, GptImageQuality, normalizeImageModel } from "../../lib/generate-image";
+import { getSheetLayoutSpec } from "../../lib/sheet-layout";
+import { buildTamerPrompt } from "../../lib/tamer-prompts";
+import { validateTamerRequest } from "../../lib/tamer-validate";
 
 // Configure fal client with API key from environment
 fal.config({
@@ -238,9 +241,78 @@ const ASPECT_RATIOS: Record<SpriteType, AspectRatio> = {
   "idle-iso": "1:1",
 };
 
+function parseGptImageQuality(value: unknown): GptImageQuality | undefined {
+  return value === "low" || value === "medium" || value === "high" ? value : undefined;
+}
+
+async function generateTamerSpriteSheet(body: unknown): Promise<NextResponse> {
+  const validated = validateTamerRequest(body);
+  if (!validated.ok) {
+    return NextResponse.json({ error: validated.error }, { status: 400 });
+  }
+
+  const {
+    characterKey,
+    characterImageUrl,
+    type,
+    referenceImageUrls,
+    additionalNotes,
+    character,
+    rule,
+  } = validated.data;
+
+  const request = body as { imageModel?: unknown; gptImageQuality?: unknown };
+  const model = normalizeImageModel(request.imageModel);
+  const quality = parseGptImageQuality(request.gptImageQuality);
+  const prompt = buildTamerPrompt({
+    character,
+    rule,
+    additionalNotes,
+    model,
+  });
+  const layoutSpec = getSheetLayoutSpec(rule.layout);
+
+  // Canonical master is always first. Optional directional/style refs follow.
+  const imageUrls = [characterImageUrl, ...referenceImageUrls];
+
+  const image = await generateImage({
+    model,
+    prompt,
+    imageUrls,
+    aspectRatio: layoutSpec.aspectRatio,
+    gptImageQuality: quality,
+  });
+
+  return NextResponse.json({
+    imageUrl: image.url,
+    width: image.width,
+    height: image.height,
+    type,
+    characterKey,
+    frameCount: rule.frames,
+    layout: rule.layout,
+    direction: rule.direction,
+    bodyType: rule.bodyType,
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { characterImageUrl, type = "walk", customPrompt, referenceImageUrls, imageModel, gptImageQuality } = await request.json();
+    const body = await request.json();
+    const { mode } = body as { mode?: unknown };
+
+    if (mode === "tamer") {
+      return await generateTamerSpriteSheet(body);
+    }
+
+    if (mode !== undefined && mode !== "generic") {
+      return NextResponse.json(
+        { error: 'mode must be "generic" or "tamer"' },
+        { status: 400 }
+      );
+    }
+
+    const { characterImageUrl, type = "walk", customPrompt, referenceImageUrls, imageModel, gptImageQuality } = body;
 
     if (!characterImageUrl) {
       return NextResponse.json(
@@ -250,10 +322,7 @@ export async function POST(request: NextRequest) {
     }
 
     const model = normalizeImageModel(imageModel);
-    const quality: GptImageQuality | undefined =
-      gptImageQuality === "low" || gptImageQuality === "medium" || gptImageQuality === "high"
-        ? gptImageQuality
-        : undefined;
+    const quality = parseGptImageQuality(gptImageQuality);
     const spriteType = (type as SpriteType) || "walk";
     const modelSpecificPrompt = model === "gpt-image-2" ? GPT_IMAGE_2_PROMPTS[spriteType] : undefined;
     const prompt = customPrompt || modelSpecificPrompt || PROMPTS[spriteType] || PROMPTS.walk;
